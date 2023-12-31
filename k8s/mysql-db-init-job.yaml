@@ -1,0 +1,26 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: mysql-db-init-job
+spec:
+  template:
+    spec:
+      containers:
+      - name: mysql-init
+        image: mysql:5.7
+        command: ["/bin/sh", "-c"]
+        args: ["mysql -h mysql -uroot -p$MYSQL_ROOT_PASSWORD recruit -e 'source /init-db/init-db.sql'"]
+        env:
+          - name: MYSQL_ROOT_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: mysql-secret
+                key: MYSQL_ROOT_PASSWORD
+        volumeMounts:
+        - name: init-db-script
+          mountPath: /init-db
+      volumes:
+      - name: init-db-script
+        configMap:
+          name: mysql-init-db-script
+      restartPolicy: Never
