@@ -36,16 +36,16 @@ pipeline {
         stage('Terraform') {
             steps {
                 script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'your-credentials-id']]) {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: '4d01188a-f5c7-49ad-bc45-730090499e04']]) {
+                        // Initialize and Apply Terraform Configuration
                         sh "cd terraform && terraform init"
                         sh "cd terraform && terraform apply -auto-approve"
                         EKS_CLUSTER_NAME = sh(script: "cd terraform && terraform output -raw eks_cluster_name", returnStdout: true).trim()
-                        env.EKS_CLUSTER_NAME = EKS_CLUSTER_NAME
+                        env.EKS_CLUSTER_NAME = EKS_CLUSTER_NAME     
                     }
                 }
             }
         }
-
 
 
         stage('Push to ECR') {
