@@ -42,6 +42,7 @@ pipeline {
                         sh "cd terraform && terraform apply -auto-approve"
                         EKS_CLUSTER_NAME = sh(script: "cd terraform && terraform output -raw eks_cluster_name", returnStdout: true).trim()
                         env.EKS_CLUSTER_NAME = EKS_CLUSTER_NAME     
+                        echo "EKS Cluster Name: ${EKS_CLUSTER_NAME}" // Debug line
                     }
                 }
             }
