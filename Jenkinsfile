@@ -71,7 +71,7 @@ pipeline {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: '4d01188a-f5c7-49ad-bc45-730090499e04']]){
                         // Set up kubectl to interact with your EKS cluster
-                        sh "aws eks update-kubeconfig --region ${AWS_REGION} --name ${env.EKS_CLUSTER_NAME}"
+                        sh "aws eks update-kubeconfig --region ${AWS_REGION} --name recruit-cluster"
 
                         // Construct the ECR image URI
                         def ecrImageUri = "\$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com/recruiters:latest"
