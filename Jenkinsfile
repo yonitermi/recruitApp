@@ -39,9 +39,6 @@ pipeline {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: '4d01188a-f5c7-49ad-bc45-730090499e04']]) {
                         // Initialize and Apply Terraform Configuration
                         sh "cd terraform && terraform init"
-
-                        sh "cd terraform && terraform refresh"
-                        
                         sh "cd terraform && terraform apply -auto-approve"
                     }
                 }
