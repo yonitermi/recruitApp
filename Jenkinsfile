@@ -89,5 +89,19 @@ pipeline {
                 }
             }
         }
+
+        stage('Destroy Cluster') {
+            steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: '4d01188a-f5c7-49ad-bc45-730090499e04']]) {
+                        // Navigate to Terraform directory and initialize
+                        sh "cd terraform && terraform init"
+
+                        // Destroy the EKS cluster and associated resources
+                        sh "cd terraform && terraform destroy -auto-approve"
+                    }
+                }
+            }
+        }
     }
 }
