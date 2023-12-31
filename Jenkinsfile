@@ -36,14 +36,16 @@ pipeline {
         stage('Terraform') {
             steps {
                 script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: '4d01188a-f5c7-49ad-bc45-730090499e04']]) {
-                        // Initialize and Apply Terraform Configuration
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'your-credentials-id']]) {
                         sh "cd terraform && terraform init"
                         sh "cd terraform && terraform apply -auto-approve"
+                        EKS_CLUSTER_NAME = sh(script: "cd terraform && terraform output -raw eks_cluster_name", returnStdout: true).trim()
+                        env.EKS_CLUSTER_NAME = EKS_CLUSTER_NAME
                     }
                 }
             }
         }
+
 
 
         stage('Push to ECR') {
@@ -68,7 +70,7 @@ pipeline {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: '4d01188a-f5c7-49ad-bc45-730090499e04']]){
                         // Set up kubectl to interact with your EKS cluster
-                        sh 'aws eks update-kubeconfig --region us-east-1 --name myjenkins-server-eks-cluster'
+                        sh "aws eks update-kubeconfig --region ${AWS_REGION} --name ${env.EKS_CLUSTER_NAME}"
 
                         // Construct the ECR image URI
                         def ecrImageUri = "\$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com/recruiters:latest"
