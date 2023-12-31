@@ -1,17 +1,17 @@
 module "eks" {
     source  = "terraform-aws-modules/eks/aws"
     version = "~> 19.0"
-    cluster_name = "myjenkins-server-eks-cluster"
+    cluster_name = "recruit-cluster"
     cluster_version = "1.24"
 
     cluster_endpoint_public_access  = true
 
-    vpc_id = module.myjenkins-server-vpc.vpc_id
-    subnet_ids = module.myjenkins-server-vpc.private_subnets
+    vpc_id     = module.recruit-vpc.vpc_id
+    subnet_ids = module.recruit-vpc.private_subnets
 
     tags = {
         environment = "development"
-        application = "myjenkins-server"
+        application = "recruit-cluster"
     }
 
     eks_managed_node_groups = {

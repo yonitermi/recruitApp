@@ -1,13 +1,16 @@
 variable "vpc_cidr_block" {
- type = string
+  type = string
+  description = "CIDR block for the recruit VPC"
 }
 
-variable "private_subnet_cidr_blocks" {
- type = list(string)
+variable "recruit_private_subnet_cidr_blocks" {
+  type = list(string)
+  description = "CIDR blocks for the recruit private subnets"
 }
 
-variable "public_subnet_cidr_blocks" {
- type = list(string)
+variable "recruit_public_subnet_cidr_blocks" {
+  type = list(string)
+  description = "CIDR blocks for the recruit public subnets"
 }
 
 variable "region" {
