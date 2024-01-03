@@ -63,8 +63,6 @@ pipeline {
             }
         }
 
-
-
         stage('Deploy Argo CD to EKS') {
             steps {
                 script {
@@ -79,22 +77,18 @@ pipeline {
                         // Wait for Argo CD to become ready
                         sh "kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=120s"
 
-                        // Start port forwarding
-                        sh "kubectl port-forward svc/argocd-server -n argocd 8080:443 &"
-                        sleep 30 // Wait a bit to ensure the port forwarding is established
+                        // Change Argo CD service to LoadBalancer
+                        sh "kubectl patch svc argocd-server -n argocd -p '{\"spec\": {\"type\": \"LoadBalancer\"}}'"
+                        sh "sleep 60" // Wait for LoadBalancer to be assigned an external IP
+
+                        // Get the external IP of the Argo CD server
+                        def argocdServerIp = sh(script: "kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
 
                         // Retrieve Argo CD admin password
                         def adminPassword = sh(script: "kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d", returnStdout: true).trim()
 
-                        // Attempt to log in to Argo CD
-                        sh script: "echo y | argocd login localhost:8080 --username admin --password ${adminPassword} --insecure --plaintext", returnStatus: true
-
-                        // Clone the repository to access application.yaml
-                        sh "git clone https://github.com/yonitermi/recruitApp.git"
-                        sh "cd recruitApp"
-
-                        // Register the GitHub repository with Argo CD
-                        sh "argocd repo add https://github.com/yonitermi/recruitApp.git"
+                        // Log in to Argo CD
+                        sh "argocd login ${argocdServerIp} --username admin --password ${adminPassword} --insecure --plaintext"
 
                         // Create an application in Argo CD from the application.yaml
                         sh "argocd app create -f argocd/application.yaml"
