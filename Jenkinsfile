@@ -81,7 +81,7 @@ pipeline {
                         sh "kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2"
 
                         // Configure Argo CD CLI
-                        sh "argocd login recruit-cluster-argocd-server.argocd:443 --username admin --password $(kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath=\"{.data.password}\" | base64 -d) --insecure"
+                        sh 'argocd login recruit-cluster-argocd-server.argocd:443 --username admin --password $(kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 -d) --insecure'
 
                         // Clone the repository to access application.yaml
                         sh "git clone https://github.com/yonitermi/recruitApp.git"
