@@ -84,8 +84,8 @@ pipeline {
                         // Retrieve Argo CD admin password
                         def adminPassword = sh(script: "kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d", returnStdout: true).trim()
 
-                        // Configure Argo CD CLI to use port forwarding
-                        sh "argocd login localhost:8080 --username admin --password ${adminPassword} --insecure"
+                        // Configure Argo CD CLI to use port forwarding with plaintext
+                        sh "argocd login localhost:8080 --username admin --password ${adminPassword} --insecure --plaintext"
 
                         // Clone the repository to access application.yaml
                         sh "git clone https://github.com/yonitermi/recruitApp.git"
