@@ -77,21 +77,17 @@ pipeline {
                         // Wait for Argo CD to become ready
                         sh "kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=120s"
 
-                        // Change Argo CD service to LoadBalancer
-                        sh "kubectl patch svc argocd-server -n argocd -p '{\"spec\": {\"type\": \"LoadBalancer\"}}'"
-                        sh "sleep 60" // Wait for LoadBalancer to be assigned an external IP
-
-                        // Get the external IP of the Argo CD server
-                        def argocdServerIp = sh(script: "kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
+                        // Retrieve the LoadBalancer DNS name
+                        def loadBalancerDns = sh(script: "kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
 
                         // Retrieve Argo CD admin password
                         def adminPassword = sh(script: "kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d", returnStdout: true).trim()
 
-                        // Log in to Argo CD
-                        sh "argocd login ${argocdServerIp} --username admin --password ${adminPassword} --insecure --plaintext"
+                        // Log in to Argo CD using CLI
+                        sh "argocd login ${loadBalancerDns} --username admin --password ${adminPassword} --insecure --plaintext"
 
-                        // Create an application in Argo CD from the application.yaml
-                        sh "argocd app create -f argocd/application.yaml"
+                        // This should point to the file within the GitHub repo, not a local file
+                        sh "argocd app create --file https://github.com/yonitermi/recruitApp.git/argocd/application.yaml"
                     }
                 }
             }
