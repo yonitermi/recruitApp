@@ -63,6 +63,8 @@ pipeline {
             }
         }
 
+
+
         stage('Deploy Argo CD to EKS') {
             steps {
                 script {
@@ -77,15 +79,15 @@ pipeline {
                         // Wait for Argo CD to become ready
                         sh "kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=120s"
 
-                        // Start port forwarding in the background
+                        // Start port forwarding
                         sh "kubectl port-forward svc/argocd-server -n argocd 8080:443 &"
                         sleep 30 // Wait a bit to ensure the port forwarding is established
 
                         // Retrieve Argo CD admin password
                         def adminPassword = sh(script: "kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d", returnStdout: true).trim()
 
-                        // Configure Argo CD CLI to use port forwarding with plaintext
-                        sh "argocd login localhost:8080 --username admin --password ${adminPassword} --insecure --plaintext"
+                        // Attempt to log in to Argo CD
+                        sh script: "echo y | argocd login localhost:8080 --username admin --password ${adminPassword} --insecure --plaintext", returnStatus: true
 
                         // Clone the repository to access application.yaml
                         sh "git clone https://github.com/yonitermi/recruitApp.git"
