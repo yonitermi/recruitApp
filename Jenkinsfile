@@ -77,11 +77,15 @@ pipeline {
                         // Wait for Argo CD to become ready
                         sh "kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=120s"
 
-                        // Retrieve Argo CD admin password
-                        sh "kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2"
+                        // Start port forwarding in the background
+                        sh "kubectl port-forward svc/argocd-server -n argocd 8080:443 &"
+                        sleep 30 // Wait a bit to ensure the port forwarding is established
 
-                        // Configure Argo CD CLI
-                        sh 'argocd login recruit-cluster-argocd-server.argocd:443 --username admin --password $(kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath="{.data.password}" | base64 -d) --insecure'
+                        // Retrieve Argo CD admin password
+                        def adminPassword = sh(script: "kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d", returnStdout: true).trim()
+
+                        // Configure Argo CD CLI to use port forwarding
+                        sh "argocd login localhost:8080 --username admin --password ${adminPassword} --insecure"
 
                         // Clone the repository to access application.yaml
                         sh "git clone https://github.com/yonitermi/recruitApp.git"
