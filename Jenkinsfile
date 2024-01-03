@@ -40,9 +40,6 @@ pipeline {
                         // Initialize and Apply Terraform Configuration
                         sh "cd terraform && terraform init"
                         sh "cd terraform && terraform apply -auto-approve"
-                        EKS_CLUSTER_NAME = sh(script: "cd terraform && terraform output -raw eks_cluster_name", returnStdout: true).trim()
-                        env.EKS_CLUSTER_NAME = EKS_CLUSTER_NAME     
-                        echo "EKS Cluster Name: ${EKS_CLUSTER_NAME}" // Debug line
                     }
                 }
             }
@@ -66,39 +63,35 @@ pipeline {
             }
         }
 
-        stage('Deploy to EKS') {
+        stage('Deploy Argo CD to EKS') {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: '4d01188a-f5c7-49ad-bc45-730090499e04']]){
                         // Set up kubectl to interact with your EKS cluster
                         sh "aws eks update-kubeconfig --region ${AWS_REGION} --name recruit-cluster"
 
-                        // Construct the ECR image URI
-                        def ecrImageUri = "\$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com/recruiters:latest"
+                        // Install Argo CD
+                        sh "kubectl create namespace argocd || true"
+                        sh "kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml"
 
-                        // Update the deployment file with the ECR image URI
-                        sh "sed -i 's|image: REPLACE_WITH_ECR_IMAGE|image: ${ecrImageUri}|' k8s/flaskapp-deployment.yaml"
+                        // Wait for Argo CD to become ready
+                        sh "kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=120s"
 
-                        // Deploy Kubernetes manifests
-                        sh 'kubectl apply -f k8s/mysql-secret.yaml'
-                        sh 'kubectl apply -f k8s/mysql-deployment.yaml'
-                        sh 'kubectl apply -f k8s/mysql-init-db-script.yaml'
-                        sh 'kubectl apply -f k8s/mysql-db-init-job.yaml'
-                        sh 'kubectl apply -f k8s/flaskapp-deployment.yaml'
-                    }
-                }
-            }
-        }
+                        // Retrieve Argo CD admin password
+                        sh "kubectl get pods -n argocd -l app.kubernetes.io/name=argocd-server -o name | cut -d'/' -f 2"
 
-        stage('Destroy Cluster') {
-            steps {
-                script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: '4d01188a-f5c7-49ad-bc45-730090499e04']]) {
-                        // Navigate to Terraform directory and initialize
-                        sh "cd terraform && terraform init"
+                        // Configure Argo CD CLI
+                        sh "argocd login recruit-cluster-argocd-server.argocd:443 --username admin --password $(kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath=\"{.data.password}\" | base64 -d) --insecure"
 
-                        // Destroy the EKS cluster and associated resources
-                        sh "cd terraform && terraform destroy -auto-approve"
+                        // Clone the repository to access application.yaml
+                        sh "git clone https://github.com/yonitermi/recruitApp.git"
+                        sh "cd recruitApp"
+
+                        // Register the GitHub repository with Argo CD
+                        sh "argocd repo add https://github.com/yonitermi/recruitApp.git"
+
+                        // Create an application in Argo CD from the application.yaml
+                        sh "argocd app create -f argocd/application.yaml"
                     }
                 }
             }
