@@ -40,6 +40,10 @@ pipeline {
                         // Initialize and Apply Terraform Configuration
                         sh "cd terraform && terraform init"
                         sh "cd terraform && terraform apply -auto-approve"
+
+                        // Fetch outputs
+                        ECR_REPO = sh(script: "cd terraform && terraform output -raw ecr_repository_name", returnStdout: true).trim()
+                        EKS_CLUSTER = sh(script: "cd terraform && terraform output -raw eks_cluster_name", returnStdout: true).trim()
                     }
                 }
             }
