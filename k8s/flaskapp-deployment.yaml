@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: flaskapp
-        image: 760626477714.dkr.ecr.us-east-1.amazonaws.com/recruiters:latest
+        image: REPLACE_WITH_ECR_IMAGE
         env:
         - name: FLASKAPP_PORT
           value: "5000"
