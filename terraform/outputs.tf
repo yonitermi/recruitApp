@@ -4,7 +4,6 @@ output "ecr_repository_name" {
   description = "The name of the ECR repository"
 }
 
-# Output for EKS Cluster Name
 output "eks_cluster_name" {
   value = module.eks.cluster_id
   description = "The name of the EKS cluster"
