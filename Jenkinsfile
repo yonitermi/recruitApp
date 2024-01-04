@@ -67,6 +67,7 @@ pipeline {
             }
         }
 
+        /*
         stage('Deploy using Argo CD ') {
             steps {
                 script {
@@ -104,5 +105,6 @@ pipeline {
                 }
             }
         }
+        */
     }
 }
