@@ -63,7 +63,7 @@ pipeline {
             }
         }
 
-        stage('Deploy Argo CD to EKS') {
+        stage('Deploy using Argo CD ') {
             steps {
                 script {
                     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: '4d01188a-f5c7-49ad-bc45-730090499e04']]){
@@ -77,16 +77,23 @@ pipeline {
                         // Wait for Argo CD to become ready
                         sh "kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=120s"
 
-                        // Start port forwarding in the background
-                        sh "kubectl port-forward svc/argocd-server -n argocd 8080:443 &"
-                        sleep 30 // Wait a bit to ensure the port forwarding is established
+                        // Change the argocd-server service to LoadBalancer
+                        sh "kubectl patch svc argocd-server -n argocd -p '{\"spec\": {\"type\": \"LoadBalancer\"}}'"
+
+                        // Wait for LoadBalancer IP to be assigned
+                        echo "Waiting for LoadBalancer IP to be assigned to argocd-server service..."
+                        sleep 60 // Adjust this value based on how long it typically takes to provision a LoadBalancer in your environment
+
+                        // Retrieve Argo CD LoadBalancer IP
+                        def argoCDServerAddress = sh(script: "kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].ip}'", returnStdout: true).trim()
+                        echo "Argo CD Server Address: ${argoCDServerAddress}"
 
                         // Retrieve Argo CD admin password
                         def adminPassword = sh(script: "kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d", returnStdout: true).trim()
 
-                        // Login to Argo CD using the retrieved address and admin password
-                        sh "echo y | argocd login localhost:8080 --username admin --password ${adminPassword} --insecure"
-                        
+                        // Login to Argo CD using the LoadBalancer IP and admin password
+                        sh "echo y | argocd login ${argoCDServerAddress}:443 --username admin --password ${adminPassword} --insecure"
+
                         // Create an application in Argo CD from the application.yaml
                         sh "argocd app create -f argocd/application.yaml"
                     }
