@@ -85,8 +85,8 @@ pipeline {
                         def adminPassword = sh(script: "kubectl get secret argocd-initial-admin-secret -n argocd -o jsonpath='{.data.password}' | base64 -d", returnStdout: true).trim()
 
                         // Login to Argo CD using the retrieved address and admin password
-                        sh "argocd login localhost:8080 --username admin --password ${adminPassword} --insecure"
-
+                        sh "echo y | argocd login localhost:8080 --username admin --password ${adminPassword} --insecure"
+                        
                         // Create an application in Argo CD from the application.yaml
                         sh "argocd app create -f argocd/application.yaml"
                     }
