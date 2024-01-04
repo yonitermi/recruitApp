@@ -88,7 +88,7 @@ pipeline {
                         def argoCDServerAddress = sh(script: "kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
 
                         // Login to Argo CD using the retrieved address and admin password
-                        sh "argocd login ${argoCDServerAddress}:443 --username admin --password ${adminPassword} --insecure"
+                        sh "argocd login ${argoCDServerAddress} --username admin --password ${adminPassword} --insecure"
 
                         // Create an application in Argo CD from the application.yaml
                         sh "argocd app create -f argocd/application.yaml"
