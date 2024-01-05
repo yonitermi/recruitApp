@@ -65,6 +65,7 @@ pipeline {
                     sh """
                     cd k8s
                     sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml
+                    cd ..
                     """
 
                     // Commit and push the changes
