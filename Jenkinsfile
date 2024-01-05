@@ -56,15 +56,15 @@ pipeline {
                     // Define the ECR image URL using the ECR_REPO variable
                     def ecrImage = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
 
-                   sshagent(credentials: ['jenkins_github']) {
-                    // Pull the latest changes from the remote repository
-                    sh 'git pull origin master'
+                    sshagent(credentials: ['jenkins_github']) {
+                    // Sync with the remote branch
+                    sh 'git fetch --all'
+                    sh 'git reset --hard origin/master'
 
                     // Make the required changes in the k8s directory
                     sh """
                     cd k8s
                     sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml
-                    cd ..
                     """
 
                     // Commit and push the changes
