@@ -57,9 +57,9 @@ pipeline {
                     def ecrImage = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
 
                     sshagent(credentials: ['jenkins_github']) {
-                    // Ensure on master branch and pull the latest changes
+                    // Checkout master, specify merge strategy and pull the latest changes
                     sh 'git checkout master'
-                    sh 'git pull origin master'
+                    sh 'git pull --no-rebase origin master'
 
                     // Make the required changes in the k8s directory
                     sh """
@@ -74,7 +74,7 @@ pipeline {
                     git config user.name 'Jenkins'
                     git commit -m 'Update ECR image URL in Kubernetes Deployment'
                     git push git@github.com:yonitermi/recruitApp.git master
-                    """  
+                    """
                     }
                 }
             }
