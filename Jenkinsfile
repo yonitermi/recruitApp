@@ -64,7 +64,7 @@ pipeline {
                         echo 'Before sed command:'
                         cat k8s/flaskapp-deployment.yaml
                         """
-
+                        
                         // Modify the file
                         sh """
                         cd k8s
