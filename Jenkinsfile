@@ -53,34 +53,27 @@ pipeline {
         stage('Update Kubernetes Deployment') {
             steps {
                 script {
-                    // Print the current working directory and list files for debugging
-                    sh "pwd"
-                    sh "ls -l"
-
-                    // Navigate to the directory containing the Kubernetes config
-                    sh "cd k8s"
-
-                    // Debug: Print current directory and list files in 'k8s' directory
-                    sh "pwd"
-                    sh "ls -l"
-
                     // Create the full ECR image URL
-                    def ecrImage = "YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_REGION.amazonaws.com/${ECR_REPO}:latest"
+                    def ecrImage = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
 
-                    // Replace the placeholder in the yaml file with the ECR image URL
-                    sh "sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml"
+                    // Change directory and replace the placeholder in the yaml file in one step
+                    sh """
+                    cd k8s
+                    sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml
+                    """
 
                     // Git configuration and commit the changes
-                    sh "git config user.email 'jenkins@example.com'"
-                    sh "git config user.name 'Jenkins'"
-                    sh "git add flaskapp-deployment.yaml"
-                    sh "git commit -m 'Update ECR image URL in Kubernetes Deployment'"
-
-                    // Push the changes back to the master branch
-                    sh "git push origin master"
+                    sh """
+                    git config user.email 'jenkins@example.com'
+                    git config user.name 'Jenkins'
+                    git add k8s/flaskapp-deployment.yaml
+                    git commit -m 'Update ECR image URL in Kubernetes Deployment'
+                    git push origin master
+                    """
                 }
             }
         }
+
 
         stage('Push to ECR') {
             steps {
