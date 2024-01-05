@@ -53,30 +53,43 @@ pipeline {
         stage('Update Kubernetes Deployment') {
             steps {
                 script {
-                    // Define the ECR image URL using the ECR_REPO variable
                     def ecrImage = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
-
                     sshagent(credentials: ['jenkins_github']) {
-                    sh 'git checkout master'
-                    sh 'git pull --no-rebase origin master'  // Explicit merge strategy
+                        sh 'git checkout master'
+                        sh 'git pull --no-rebase origin master'
+                        
+                        // Check the content of the file before modification
+                        sh """
+                        echo 'Before sed command:'
+                        cat k8s/flaskapp-deployment.yaml
+                        """
 
-                    sh """
-                    cd k8s
-                    sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml
-                    cd ..
-                    """
+                        // Modify the file
+                        sh """
+                        cd k8s
+                        sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml
+                        cd ..
+                        """
 
-                    sh """
-                    git add -f k8s/flaskapp-deployment.yaml
-                    git config user.email 'jenkins@example.com'
-                    git config user.name 'Jenkins'
-                    git commit -m 'Update ECR image URL in Kubernetes Deployment'
-                    git push git@github.com:yonitermi/recruitApp.git master
-                    """
+                        // Check the content of the file after modification
+                        sh """
+                        echo 'After sed command:'
+                        cat k8s/flaskapp-deployment.yaml
+                        """
+
+                        // Commit and push the changes
+                        sh """
+                        git add -f k8s/flaskapp-deployment.yaml
+                        git config user.email 'jenkins@example.com'
+                        git config user.name 'Jenkins'
+                        git commit -m 'Update ECR image URL in Kubernetes Deployment'
+                        git push git@github.com:yonitermi/recruitApp.git master
+                        """
                     }
                 }
             }
         }
+
 
 
         stage('Push to ECR') {
