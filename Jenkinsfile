@@ -15,16 +15,6 @@ pipeline {
             }
         }
 
-        stage('Prepare Workspace') {
-            steps {
-                script {
-                    sh 'git clean -fdx'
-                    sh 'git reset --hard'
-                    sh 'git checkout master'
-                    sh 'git pull origin master'
-                }
-            }
-        }
 
         stage('Build Docker Image') {
             steps {
