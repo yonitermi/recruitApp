@@ -53,6 +53,9 @@ pipeline {
         stage('Update Kubernetes Deployment') {
             steps {
                 script {
+                    // Check out the master branch explicitly
+                    sh "git checkout master"
+
                     // Create the full ECR image URL
                     def ecrImage = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
 
