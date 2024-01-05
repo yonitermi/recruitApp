@@ -56,25 +56,22 @@ pipeline {
                     // Define the ECR image URL using the ECR_REPO variable
                     def ecrImage = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
 
-                    // Set up SSH Agent with your SSH credentials
                    // Set up SSH Agent with your SSH credentials
                     sshagent(credentials: ['jenkins_github']) {
-                        // Navigate to k8s directory, update the yaml file, then return to the repo root
-                        sh """
-                        cd k8s
-                        sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml
-                        cd ..
-                        """
+                    // Make the required changes in the k8s directory
+                    sh """
+                    cd k8s
+                    sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml
+                    """
 
-                        // Perform Git operations at the repo root
-                        sh """
-                        git checkout master
-                        git config user.email 'jenkins@example.com'
-                        git config user.name 'Jenkins'
-                        git add k8s/flaskapp-deployment.yaml
-                        git commit -m 'Update ECR image URL in Kubernetes Deployment'
-                        git push git@github.com:yonitermi/recruitApp.git master
-                        """
+                    // Commit and push the changes
+                    sh """
+                    git add k8s/flaskapp-deployment.yaml
+                    git config user.email 'jenkins@example.com'
+                    git config user.name 'Jenkins'
+                    git commit -m 'Update ECR image URL in Kubernetes Deployment'
+                    git push git@github.com:yonitermi/recruitApp.git master
+                    """
                     }
                 }
             }
