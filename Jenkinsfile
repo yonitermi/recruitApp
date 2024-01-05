@@ -57,15 +57,17 @@ pipeline {
                     def ecrImage = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
 
                     sshagent(credentials: ['jenkins_github']) {
-                    // Make the required changes in the k8s directory and check status
+                    // Ensure you're on the master branch and up-to-date
+                    sh 'git checkout master'
+                    sh 'git pull origin master'
+
+                    // Make the required changes in the k8s directory
                     sh """
                     cd k8s
                     sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml
-                    git status  # For debugging purposes
-                    cd ..
                     """
 
-                    // Force add the file and commit the changes
+                    // Commit and push the changes
                     sh """
                     git add -f k8s/flaskapp-deployment.yaml
                     git config user.email 'jenkins@example.com'
