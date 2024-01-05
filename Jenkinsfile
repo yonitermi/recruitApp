@@ -53,29 +53,28 @@ pipeline {
         stage('Update Kubernetes Deployment') {
             steps {
                 script {
-                    // Check out the master branch explicitly
-                    sh "git checkout master"
+                    // Define the ECR image URL using the ECR_REPO variable
+                    def ecrImage = "YOUR_AWS_ACCOUNT_ID.dkr.ecr.YOUR_REGION.amazonaws.com/${ECR_REPO}:latest"
 
-                    // Create the full ECR image URL
-                    def ecrImage = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
-
-                    // Change directory and replace the placeholder in the yaml file in one step
-                    sh """
-                    cd k8s
-                    sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml
-                    """
-
-                    // Git configuration and commit the changes
-                    sh """
-                    git config user.email 'jenkins@example.com'
-                    git config user.name 'Jenkins'
-                    git add k8s/flaskapp-deployment.yaml
-                    git commit -m 'Update ECR image URL in Kubernetes Deployment'
-                    git push origin master
-                    """
+                    // Set up SSH Agent with your SSH credentials
+                    sshagent(credentials: ['jenkins_github']) {
+                        // Perform Git operations
+                        sh """
+                        git checkout master
+                        cd k8s
+                        sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml
+                        git config user.email 'jenkins@example.com'
+                        git config user.name 'Jenkins'
+                        git add k8s/flaskapp-deployment.yaml
+                        git commit -m 'Update ECR image URL in Kubernetes Deployment'
+                        git push git@github.com:yonitermi/recruitApp.git master
+                        """
+                    }
                 }
             }
         }
+
+
 
 
         stage('Push to ECR') {
