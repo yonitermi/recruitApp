@@ -57,9 +57,9 @@ pipeline {
                     def ecrImage = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
 
                     sshagent(credentials: ['jenkins_github']) {
-                    // Ensure you're on the master branch and up-to-date
+                    // Ensure on master branch and pull the latest changes
                     sh 'git checkout master'
-                    sh 'git pull origin master'
+                    sh 'git pull origin master'  // Using merge strategy
 
                     // Make the required changes in the k8s directory
                     sh """
