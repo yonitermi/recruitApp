@@ -4,6 +4,7 @@ pipeline {
     environment {
         DOCKER_IMAGE = 'recruit'  // Replace with your Docker image name
         AWS_REGION = "us-east-1"
+        AWS_ACCOUNT = "760626477714"
     }
 
     stages {
@@ -49,6 +50,30 @@ pipeline {
             }
         }
 
+    stage('Update Kubernetes Deployment') {
+        steps {
+            script {
+                // Navigate to the directory containing the Kubernetes config
+                sh "cd k8s"
+
+                // Create the full ECR image URL
+                def ecrImage = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
+
+                // Replace the placeholder in the yaml file with the ECR image URL
+                sh "sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml"
+
+                // Git configuration and commit the changes
+                sh "git config user.email 'jenkins@example.com'"
+                sh "git config user.name 'Jenkins'"
+                sh "git add flaskapp-deployment.yaml"
+                sh "git commit -m 'Update ECR image URL in Kubernetes Deployment'"
+
+                // Push the changes back to the master branch
+                sh "git push origin master"
+            }
+        }
+    }
+
 
         stage('Push to ECR') {
             steps {
@@ -66,6 +91,9 @@ pipeline {
                 }
             }
         }
+
+
+
 
         /*
         stage('Deploy using Argo CD ') {
