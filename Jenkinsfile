@@ -72,10 +72,11 @@ pipeline {
             steps {
                 script {
                     // Push the Docker image to Docker Hub
-                    sh "docker build -t ${DOCKER_IMAGE}:${IMAGE_VERSION} ."
+                    sh "docker push ${DOCKER_IMAGE}:${IMAGE_VERSION}"
                 }
             }
         }
+
 
         stage('Logout from Docker Hub') {
             steps {
