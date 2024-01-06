@@ -12,6 +12,7 @@ pipeline {
 
     stages {
         
+        
         stage('Checkout Code') {
             steps {
                 // Use SSH URL for the repository in the checkout step
