@@ -16,27 +16,29 @@ pipeline {
             steps {
                 checkout scm
                 script {
-                    sh "git checkout master"
-                    sh "git pull --rebase origin master"
-                    // Read the version from version.txt
-                    def version = readFile('version.txt').trim()
+                    sshagent(credentials: ['jenkins_github']){
+                        sh "git checkout master"
+                        sh "git pull --rebase origin master"
+                        // Read the version from version.txt
+                        def version = readFile('version.txt').trim()
 
-                    // Increment the patch version
-                    def (major, minor, patch) = version.tokenize('.')
-                    patch = patch.toInteger() + 1
-                    IMAGE_VERSION = "${major}.${minor}.${patch}"
+                        // Increment the patch version
+                        def (major, minor, patch) = version.tokenize('.')
+                        patch = patch.toInteger() + 1
+                        IMAGE_VERSION = "${major}.${minor}.${patch}"
 
-                    // Write the incremented version back to version.txt
-                    writeFile file: 'version.txt', text: IMAGE_VERSION
+                        // Write the incremented version back to version.txt
+                        writeFile file: 'version.txt', text: IMAGE_VERSION
 
-                    // Commit and push the updated version file
-                    sh """
-                        git config user.email "jenkins@yourdomain.com"
-                        git config user.name "Jenkins"
-                        git add version.txt
-                        git commit -m "Increment version to ${IMAGE_VERSION}"
-                        git push
-                    """
+                        // Commit and push the updated version file
+                        sh """
+                            git config user.email "jenkins@yourdomain.com"
+                            git config user.name "Jenkins"
+                            git add version.txt
+                            git commit -m "Increment version to ${IMAGE_VERSION}"
+                            git push
+                        """
+                    }    
                 }
             }
         }
