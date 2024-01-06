@@ -22,13 +22,11 @@ pipeline {
                         extensions: []])
 
                 script {
-                    // Synchronize with the remote repository
+               // Synchronize with the remote repository
                 sshagent(credentials: ['jenkins_github']) {
                     sh "git checkout master"
                     sh "git pull --rebase origin master"
                 }
-
-                // Update version.txt and flaskapp-deployment.yaml
 
                 // Read the version from version.txt
                 def version = readFile('version.txt').trim()
@@ -36,13 +34,13 @@ pipeline {
                 // Increment the patch version
                 def (major, minor, patch) = version.tokenize('.')
                 patch = patch.toInteger() + 1
-                def newImageVersion = "${major}.${minor}.${patch}"
+                IMAGE_VERSION = "${major}.${minor}.${patch}"
 
                 // Write the incremented version back to version.txt
-                writeFile file: 'version.txt', text: newImageVersion
+                writeFile file: 'version.txt', text: IMAGE_VERSION
 
-                // Update the deployment file
-                def newImage = "${DOCKER_IMAGE}:${newImageVersion}"
+                // Update the deployment file with the new image version
+                def newImage = "${DOCKER_IMAGE}:${IMAGE_VERSION}"
                 sh "sed -i 's|image:.*|image: ${newImage}|' ./k8s/flaskapp-deployment.yaml"
 
                 // Commit and push the updated files back to your repo
@@ -51,7 +49,7 @@ pipeline {
                         git config user.email "jenkins@yourdomain.com"
                         git config user.name "Jenkins"
                         git add version.txt ./k8s/flaskapp-deployment.yaml
-                        git commit -m "Update version to ${newImageVersion} and deployment image to ${newImage}"
+                        git commit -m "Update version to ${IMAGE_VERSION} and deployment image to ${newImage}"
                         git push origin master
                     """
                     }
