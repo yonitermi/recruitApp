@@ -21,29 +21,38 @@ pipeline {
                         extensions: []])
 
                 script {
-                    sshagent(credentials: ['jenkins_github']) {
-                        sh "git checkout master"
-                        sh "git pull --rebase origin master"
-                        
-                        // Read the version from version.txt
-                        def version = readFile('version.txt').trim()
+                    // Synchronize with the remote repository
+                sshagent(credentials: ['jenkins_github']) {
+                    sh "git checkout master"
+                    sh "git pull --rebase origin master"
+                }
 
-                        // Increment the patch version
-                        def (major, minor, patch) = version.tokenize('.')
-                        patch = patch.toInteger() + 1
-                        IMAGE_VERSION = "${major}.${minor}.${patch}"
+                // Update version.txt and flaskapp-deployment.yaml
 
-                        // Write the incremented version back to version.txt
-                        writeFile file: 'version.txt', text: IMAGE_VERSION
+                // Read the version from version.txt
+                def version = readFile('version.txt').trim()
 
-                        // Commit and push the updated version file
-                        sh """
-                            git config user.email "jenkins@yourdomain.com"
-                            git config user.name "Jenkins"
-                            git add version.txt
-                            git commit -m "Increment version to ${IMAGE_VERSION}"
-                            git push origin master
-                        """
+                // Increment the patch version
+                def (major, minor, patch) = version.tokenize('.')
+                patch = patch.toInteger() + 1
+                def newImageVersion = "${major}.${minor}.${patch}"
+
+                // Write the incremented version back to version.txt
+                writeFile file: 'version.txt', text: newImageVersion
+
+                // Update the deployment file
+                def newImage = "${DOCKER_IMAGE}:${newImageVersion}"
+                sh "sed -i 's|image:.*|image: ${newImage}|' ./k8s/flaskapp-deployment.yaml"
+
+                // Commit and push the updated files back to your repo
+                sshagent(credentials: ['jenkins_github']) {
+                    sh """
+                        git config user.email "jenkins@yourdomain.com"
+                        git config user.name "Jenkins"
+                        git add version.txt ./k8s/flaskapp-deployment.yaml
+                        git commit -m "Update version to ${newImageVersion} and deployment image to ${newImage}"
+                        git push origin master
+                    """
                     }
                 }
             }
