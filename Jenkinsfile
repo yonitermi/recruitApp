@@ -2,29 +2,81 @@ pipeline {
     agent any 
 
     environment {
-        DOCKER_IMAGE = 'recruit'  // Replace with your Docker image name
+        DOCKER_IMAGE = 'yoniyonatab/recruit'  
+        DOCKER_USERNAME = 'yoniyonatab' 
+        DOCKER_PASSWORD = 'Retailsoft2022!' 
+        IMAGE_VERSION = "1.0.${env.BUILD_NUMBER}" 
         AWS_REGION = "us-east-1"
         AWS_ACCOUNT = "760626477714"
     }
 
     stages {
+        
         stage('Checkout Code') {
             steps {
-                // Get the latest code from your Git repository
                 checkout scm
+                script {
+                    // Read the version from version.txt
+                    def version = readFile('version.txt').trim()
+
+                    // Increment the patch version
+                    def (major, minor, patch) = version.tokenize('.')
+                    patch = patch.toInteger() + 1
+                    IMAGE_VERSION = "${major}.${minor}.${patch}"
+
+                    // Write the incremented version back to version.txt
+                    writeFile file: 'version.txt', text: IMAGE_VERSION
+
+                    // Commit and push the updated version file
+                    sh """
+                        git config user.email "jenkins@yourdomain.com"
+                        git config user.name "Jenkins"
+                        git add version.txt
+                        git commit -m "Increment version to ${IMAGE_VERSION}"
+                        git push
+                    """
+                }
             }
         }
-
 
         stage('Build Docker Image') {
             steps {
                 script {
                     // Build a Docker image from your Dockerfile
-                    sh "docker build -t ${DOCKER_IMAGE} ."
+                    sh "docker build -t ${DOCKER_IMAGE}:${IMAGE_VERSION} ."
                 }
             }
         }
 
+        stage('Login to Docker Hub') {
+            steps {
+                script {
+                    // Login to Docker Hub
+                    sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
+                }
+            }
+        }
+
+        stage('Push Image to Docker Hub') {
+            steps {
+                script {
+                    // Push the Docker image to Docker Hub
+                    sh "docker build -t ${DOCKER_IMAGE}:${IMAGE_VERSION} ."
+                }
+            }
+        }
+
+        stage('Logout from Docker Hub') {
+            steps {
+                script {
+                    // Logout from Docker Hub
+                    sh "docker logout"
+                }
+            }
+        }
+
+        
+        /*
         stage('Run Tests') {
             steps {
                 script {
@@ -33,8 +85,9 @@ pipeline {
                 }
             }
         }
+        */
 
-
+        /*
         stage('Terraform') {
             steps {
                 script {
@@ -42,57 +95,17 @@ pipeline {
                         // Initialize and Apply Terraform Configuration
                         sh "cd terraform && terraform init"
                         sh "cd terraform && terraform apply -auto-approve"
-
                         // Fetch outputs
-                        ECR_REPO = sh(script: "cd terraform && terraform output -raw ecr_repository_name", returnStdout: true).trim()
+                        // in case i will push to AWS ECR_REPO = sh(script: "cd terraform && terraform output -raw ecr_repository_name", returnStdout: true).trim()
                         EKS_CLUSTER = sh(script: "cd terraform && terraform output -raw eks_cluster_name", returnStdout: true).trim()
                     }
                 }
             }
         }
-
-        stage('Update Kubernetes Deployment') {
-            steps {
-                script {
-                    def ecrImage = "${AWS_ACCOUNT}.dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
-                    sshagent(credentials: ['jenkins_github']) {
-                        sh 'git checkout master'
-                        sh 'git pull --no-rebase origin master'
-                        
-                        // Check the content of the file before modification
-                        sh """
-                        echo 'Before sed command:'
-                        cat k8s/flaskapp-deployment.yaml
-                        """
-                        
-                        // Modify the file
-                        sh """
-                        cd k8s
-                        sed -i 's|REPLACE_WITH_ECR_IMAGE|${ecrImage}|' flaskapp-deployment.yaml
-                        cd ..
-                        """
-
-                        // Check the content of the file after modification
-                        sh """
-                        echo 'After sed command:'
-                        cat k8s/flaskapp-deployment.yaml
-                        """
-
-                        // Commit and push the changes
-                        sh """
-                        git add -f k8s/flaskapp-deployment.yaml
-                        git config user.email 'jenkins@example.com'
-                        git config user.name 'Jenkins'
-                        git commit -m 'Update ECR image URL in Kubernetes Deployment'
-                        git push git@github.com:yonitermi/recruitApp.git master
-                        """
-                    }
-                }
-            }
-        }
+        */
 
 
-
+        /*
         stage('Push to ECR') {
             steps {
                 script {
@@ -109,8 +122,7 @@ pipeline {
                 }
             }
         }
-
-
+       */
 
 
         /*
