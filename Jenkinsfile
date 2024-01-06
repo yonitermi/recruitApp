@@ -14,11 +14,17 @@ pipeline {
         
         stage('Checkout Code') {
             steps {
-                checkout scm
+                // Use SSH URL for the repository in the checkout step
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']],
+                        userRemoteConfigs: [[url: 'git@github.com:yonitermi/recruitApp.git', credentialsId: 'jenkins_github']],
+                        doGenerateSubmoduleConfigurations: false,
+                        extensions: []])
+
                 script {
-                    sshagent(credentials: ['jenkins_github']){
+                    sshagent(credentials: ['jenkins_github']) {
                         sh "git checkout master"
                         sh "git pull --rebase origin master"
+                        
                         // Read the version from version.txt
                         def version = readFile('version.txt').trim()
 
@@ -36,12 +42,13 @@ pipeline {
                             git config user.name "Jenkins"
                             git add version.txt
                             git commit -m "Increment version to ${IMAGE_VERSION}"
-                            git push
+                            git push origin master
                         """
-                    }    
+                    }
                 }
             }
         }
+
 
         stage('Build Docker Image') {
             steps {
