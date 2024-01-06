@@ -17,7 +17,7 @@ pipeline {
                 checkout scm
                 script {
                     sh "git checkout master"
-                    sh "git pull origin master"
+                    sh "git pull --rebase origin master"
                     // Read the version from version.txt
                     def version = readFile('version.txt').trim()
 
