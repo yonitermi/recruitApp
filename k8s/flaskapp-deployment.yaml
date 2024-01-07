@@ -19,7 +19,10 @@ spec:
         - name: FLASKAPP_PORT
           value: "5000"
         - name: DATABASE_URI
-          value: "mysql+pymysql://root:rootpassword@mysql:3306/recruit"
+          value: "mysql+pymysql://root:$(MYSQL_ROOT_PASSWORD)@mysql:3306/recruit"
+        envFrom:
+        - secretRef:
+            name: mysql-secret
         ports:
         - containerPort: 5000
 ---

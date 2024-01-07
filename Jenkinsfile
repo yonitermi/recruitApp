@@ -97,7 +97,7 @@ pipeline {
         }
 
         
-        /*
+        
         stage('Run Tests') {
             steps {
                 script {
@@ -106,9 +106,9 @@ pipeline {
                 }
             }
         }
-        */
+        
 
-        /*
+        
         stage('Terraform') {
             steps {
                 script {
@@ -123,7 +123,7 @@ pipeline {
                 }
             }
         }
-        */
+        
 
 
         /*
