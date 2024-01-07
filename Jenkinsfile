@@ -71,7 +71,7 @@ pipeline {
                     // Binding credentials to environment variables
                     withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
                         // Login to Docker Hub using bound credentials
-                        sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
+                        sh "echo ${DOCKER_PASSWORD} | echo ${DOCKER_USERNAME} |docker login -u ${DOCKER_USERNAME} --password-stdin"
                         sh "docker push ${DOCKER_IMAGE}:${IMAGE_VERSION}"
                         sh "docker logout"
                     }
