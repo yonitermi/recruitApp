@@ -88,7 +88,7 @@ pipeline {
                 }
             }
         }
-        
+        */
 
         
         stage('Terraform') {
@@ -142,7 +142,7 @@ pipeline {
                     }
                 }
             }
-        } */
+        } 
     }
 }
 
