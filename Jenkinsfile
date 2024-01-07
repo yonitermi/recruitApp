@@ -69,18 +69,14 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
-                        // Define local environment variable for Docker password
-                        withEnv(['DOCKER_PASSWORD=$PASSWORD']) {
-                            // Login to Docker Hub
-                            sh "echo $DOCKER_PASSWORD | docker login -u $USERNAME --password-stdin"
-                            sh "docker push ${DOCKER_IMAGE}:${IMAGE_VERSION}"
-                            sh "docker logout"
+                          
+                    sh "docker login -u yoniyonatab -p Retailsoft2022!"
+                    sh "docker push ${DOCKER_IMAGE}:${IMAGE_VERSION}"
+                    sh "docker logout"             
+                     
                         }
                     }
                 }
-            }
-        }
 
         
         /*
