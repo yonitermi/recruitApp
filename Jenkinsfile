@@ -3,8 +3,6 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'yoniyonatab/recruit'  
-        DOCKER_USERNAME = 'yoniyonatab' 
-        DOCKER_PASSWORD = 'Retailsoft2022!' 
         IMAGE_VERSION = "1.0.${env.BUILD_NUMBER}" 
         AWS_REGION = "us-east-1"
         AWS_ACCOUNT = "760626477714"
@@ -67,37 +65,22 @@ pipeline {
             }
         }
 
-        stage('Login to Docker Hub') {
+        stage('Push to Docker Hub') {
             steps {
                 script {
-                    // Login to Docker Hub
-                    sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
-                }
-            }
-        }
-
-
-        stage('Push Image to Docker Hub') {
-            steps {
-                script {
-                    // Push the Docker image to Docker Hub
-                    sh "docker push ${DOCKER_IMAGE}:${IMAGE_VERSION}"
-                }
-            }
-        }
-
-
-        stage('Logout from Docker Hub') {
-            steps {
-                script {
-                    // Logout from Docker Hub
-                    sh "docker logout"
+                    // Binding credentials to environment variables
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        // Login to Docker Hub using bound credentials
+                        sh "docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}"
+                        sh "docker push ${DOCKER_IMAGE}:${IMAGE_VERSION}"
+                        sh "docker logout"
+                    }
                 }
             }
         }
 
         
-        
+        /*
         stage('Run Tests') {
             steps {
                 script {
@@ -124,29 +107,6 @@ pipeline {
             }
         }
         
-
-
-        /*
-        stage('Push to ECR') {
-            steps {
-                script {
-                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: '4d01188a-f5c7-49ad-bc45-730090499e04']]) {
-                        // Authenticate to ECR
-                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin \$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
-
-                        // Tag the Docker image
-                        sh "docker tag ${DOCKER_IMAGE}:latest \$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
-
-                        // Push the Docker image to ECR
-                        sh "docker push \$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
-                    }
-                }
-            }
-        }
-       */
-
-
-        /*
         stage('Deploy using Argo CD ') {
             steps {
                 script {
@@ -183,7 +143,26 @@ pipeline {
                     }
                 }
             }
-        }
-        */
+        } */
     }
 }
+
+
+        /*
+        stage('Push to ECR') {
+            steps {
+                script {
+                    withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: '4d01188a-f5c7-49ad-bc45-730090499e04']]) {
+                        // Authenticate to ECR
+                        sh "aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin \$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com"
+
+                        // Tag the Docker image
+                        sh "docker tag ${DOCKER_IMAGE}:latest \$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
+
+                        // Push the Docker image to ECR
+                        sh "docker push \$(aws sts get-caller-identity --query Account --output text).dkr.ecr.${AWS_REGION}.amazonaws.com/${ECR_REPO}:latest"
+                    }
+                }
+            }
+        }
+       */
