@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
       - name: flaskapp
-        image: yoniyonatab/recruit:1.0.18
+        image: yoniyonatab/recruit:1.0.19
         env:
         - name: FLASKAPP_PORT
           value: "5000"
