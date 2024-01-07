@@ -128,7 +128,7 @@ pipeline {
                         sleep 60 // Adjust this value based on how long it typically takes to provision a LoadBalancer in your environment
 
                         // Retrieve Argo CD LoadBalancer IP
-                        def argoCDServerAddress = sh(script: "kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].ip}'", returnStdout: true).trim()
+                        def argoCDServerAddress = sh(script: "kubectl get svc argocd-server -n argocd -o jsonpath='{.status.loadBalancer.ingress[0].hostname}'", returnStdout: true).trim()
                         echo "Argo CD Server Address: ${argoCDServerAddress}"
 
                         // Retrieve Argo CD admin password
