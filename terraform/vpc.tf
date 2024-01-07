@@ -13,16 +13,16 @@ module "recruit-vpc" {
   enable_dns_hostnames = true
 
   tags = {
-    "kubernetes.io/cluster/recruit-cluster" = "shared"
+    "kubernetes.io/cluster/recruiters-cluster" = "shared"
   }
 
   public_subnet_tags = {
-    "kubernetes.io/cluster/recruit-cluster" = "shared"
+    "kubernetes.io/cluster/recruiters-cluster" = "shared"
     "kubernetes.io/role/elb"                = 1
   }
 
   private_subnet_tags = {
-    "kubernetes.io/cluster/recruit-cluster" = "shared"
+    "kubernetes.io/cluster/recruiters-cluster" = "shared"
     "kubernetes.io/role/internal-elb"       = 1
   }
 }
