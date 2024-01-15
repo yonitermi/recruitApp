@@ -10,7 +10,6 @@ pipeline {
 
     stages {
         
-        
         stage('Checkout Code') {
             steps {
                 // Use SSH URL for the repository in the checkout step
@@ -65,22 +64,7 @@ pipeline {
             }
         }
 
-       
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
-                        // Login to Docker Hub using bound credentials
-                        sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
-                        sh "docker push ${DOCKER_IMAGE}:${IMAGE_VERSION}"
-                        sh "docker logout"
-                    }
-                }
-            }
-        }
-        
-        /*
-        stage('Run Tests') {
+       stage('Run Tests') {
             steps {
                 script {
                     // Run the tests within the Docker container
@@ -88,8 +72,20 @@ pipeline {
                 }
             }
         }
-        */
 
+        stage('Push to Docker Hub') {
+            steps {
+                script {
+                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                        // Login to Docker Hub using bound credentials
+                        sh "docker login -u $DOCKER_USERNAME --password-stdin"
+                        sh "docker push ${DOCKER_IMAGE}:${IMAGE_VERSION}"
+                        sh "docker logout"
+                    }
+                }
+            }
+        }
+        
         
         stage('Terraform') {
             steps {
