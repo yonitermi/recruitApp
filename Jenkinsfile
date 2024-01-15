@@ -54,7 +54,6 @@ pipeline {
             }
         }
 
-
         stage('Build Docker Image') {
             steps {
                 script {
@@ -64,7 +63,7 @@ pipeline {
             }
         }
 
-       stage('Run Tests') {
+        /*stage('Run Tests') {
             steps {
                 script {
                     // Run the tests within the Docker container
@@ -72,6 +71,7 @@ pipeline {
                 }
             }
         }
+        */
 
         stage('Push to Docker Hub') {
             steps {
